@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "entity-management.url",
+      "type": "java.lang.String",
+      "description": "Description for entity-management.url."
+  }
+] }
