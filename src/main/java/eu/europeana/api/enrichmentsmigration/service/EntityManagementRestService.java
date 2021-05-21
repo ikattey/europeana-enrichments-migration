@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -22,8 +23,11 @@ public class EntityManagementRestService {
     this.webClient =
         WebClient.builder()
             .baseUrl(appConfig.getEntityManagementUrl())
-//            .filter(WebClientFilter.logRequest())
-//            .filter(WebClientFilter.logResponse())
+            .defaultHeaders(
+                header -> header.setBearerAuth(appConfig.getEntityManagementRequestToken()))
+            //            .filter(WebClientFilter.logRequest())
+            //            .filter(WebClientFilter.logResponse())
+
             .build();
   }
 
@@ -43,7 +47,6 @@ public class EntityManagementRestService {
       logger.error(
           "Error from POST request entityId={} statusCode={}", entityId, we.getRawStatusCode());
       throw new ServiceException(we.getMessage(), we.getRawStatusCode());
-
     }
   }
 

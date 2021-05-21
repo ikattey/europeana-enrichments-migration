@@ -12,6 +12,9 @@ public class AppConfig {
   @Value("${entity-management.url}")
   private String entityManagementUrl;
 
+  @Value("${entity-management-migration-token}")
+  private String entityManagementRequestToken;
+
   @Value("${entities-csv.directory}")
   private String entitiesCsvDirectory;
 
@@ -49,5 +52,9 @@ public class AppConfig {
 
   public int getSkipLimit() {
     return skipLimit;
+  }
+
+  public String getEntityManagementRequestToken() {
+    return entityManagementRequestToken;
   }
 }
