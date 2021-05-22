@@ -33,6 +33,7 @@ public class EntityManagementRestService {
 
   public void registerEntity(String entityId, String externalId) {
     String requestPath = getEntityRequestPath(entityId);
+    logger.info("Making POST request requestPath={}; externalId={}", requestPath, entityId);
     try {
       webClient
           .post()
@@ -45,7 +46,7 @@ public class EntityManagementRestService {
           .block();
     } catch (WebClientResponseException we) {
       logger.error(
-          "Error from POST request entityId={} statusCode={}", entityId, we.getRawStatusCode());
+          "Error from POST request entityId={}; statusCode={}; response={}", entityId, we.getRawStatusCode(), we.getResponseBodyAsString());
       throw new ServiceException(we.getMessage(), we.getRawStatusCode());
     }
   }
