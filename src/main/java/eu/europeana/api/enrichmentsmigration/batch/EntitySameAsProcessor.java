@@ -15,7 +15,7 @@ public class EntitySameAsProcessor implements ItemProcessor<EnrichmentEntity, En
           "http://vocab.getty.edu/aat/",
           "http://vocab.getty.edu/ulan/",
           "http://viaf.org/viaf/",
-          "https://sws.geonames.org/",
+          "http://sws.geonames.org/",
           "http://www.mimo-db.eu/",
           "http://thesaurus.europeanafashion.eu/thesaurus/");
 
@@ -33,7 +33,7 @@ public class EntitySameAsProcessor implements ItemProcessor<EnrichmentEntity, En
       }
     }
 
-    logger.info(
+    logger.debug(
         "No matching datasource for entityId={}, sameAsValues={}",
         enrichmentEntity.getEntityId(),
         sameAsValues);
