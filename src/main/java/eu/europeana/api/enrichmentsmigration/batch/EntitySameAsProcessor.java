@@ -9,13 +9,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class EntitySameAsProcessor implements ItemProcessor<EnrichmentEntity, EnrichmentEntity> {
+  static final String GEO_NAMES_HTTP = "http://sws.geonames.org/";
+  static final String GEO_NAME_HTTPS = "https://sws.geonames.org/";
+
   private static final List<String> dataSources =
       List.of(
           "http://www.wikidata.org/",
           "http://vocab.getty.edu/aat/",
           "http://vocab.getty.edu/ulan/",
           "http://viaf.org/viaf/",
-          "http://sws.geonames.org/",
+          GEO_NAMES_HTTP,
           "http://www.mimo-db.eu/",
           "http://thesaurus.europeanafashion.eu/thesaurus/");
 
@@ -28,6 +31,11 @@ public class EntitySameAsProcessor implements ItemProcessor<EnrichmentEntity, En
     for (String sourceUrl : dataSources) {
       String match = getMatchingSource(sameAsValues, sourceUrl);
       if (match != null) {
+        // EntityManagement expects https:// for GeoNames
+        if (match.equals(GEO_NAMES_HTTP)) {
+          match = GEO_NAME_HTTPS;
+        }
+
         enrichmentEntity.setExternalId(match);
         return enrichmentEntity;
       }
