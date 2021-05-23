@@ -54,9 +54,10 @@ public class EntityManagementRestService {
   /** Gets the "{type}/{identifier}" from an EntityId string */
   private String getEntityRequestPath(String entityId) {
     // entity id is "http://data.europeana.eu/{type}/base/{identifier}"
-    String[] parts = entityId.split("/");
+    String idWithoutNamespace = entityId.replace("/base/", "/");
+    String[] parts = idWithoutNamespace.split("/");
 
-    String entityType = parts[parts.length - 3];
+    String entityType = parts[parts.length - 2];
 
     // capitalize first character of entity type
 
