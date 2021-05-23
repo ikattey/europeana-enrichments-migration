@@ -15,7 +15,9 @@ public class EnrichmentEntityFieldSetMapper implements FieldSetMapper<Enrichment
     EnrichmentEntity enrichmentEntity = new EnrichmentEntity();
     enrichmentEntity.setEntityId(fieldSet.readString("enrichmentEntity.about"));
 
-    String owlSameAs = fieldSet.readString("enrichmentEntity.owlSameAs");
+    String owlSameAs = fieldSet.readString("enrichmentEntity.owlSameAs")
+        // remove "" around urls
+        .replace("\"", "");
 
     // owlSameAs values are enclosed in square brackets: ie. ["http://abc,"http://dfc]
     enrichmentEntity.setSameAsValues(

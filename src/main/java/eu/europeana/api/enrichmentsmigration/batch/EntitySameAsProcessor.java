@@ -34,7 +34,7 @@ public class EntitySameAsProcessor implements ItemProcessor<EnrichmentEntity, En
       }
     }
 
-    logger.debug(
+    logger.warn(
         "No matching datasource for entityId={}, sameAsValues={}",
         enrichmentEntity.getEntityId(),
         sameAsValues);
