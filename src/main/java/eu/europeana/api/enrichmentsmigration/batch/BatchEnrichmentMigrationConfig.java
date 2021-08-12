@@ -88,7 +88,8 @@ public class BatchEnrichmentMigrationConfig {
         .reader(reader)
         .processor(processor)
         .faultTolerant()
-        .skipLimit(appConfig.getSkipLimit())
+        // do not fail on errors
+        .skipPolicy((Throwable t, int skipCount) -> true)
         .skip(ServiceException.class)
         .listener(
             (ItemProcessListener<? super EnrichmentEntity, ? super EnrichmentEntity>) listener)
