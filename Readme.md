@@ -12,7 +12,8 @@ The following command will start a Postgres instance locally using Docker:
 
 ```
 docker run -d \
--e POSTGRES_PASSWORD=s3cretPw! \
+-e POSTGRES_PASSWORD=s3cretPw \
+-e POSTGRES_DB=enrichment_batch \
 -p 5432:5432 \
 postgres
 ```

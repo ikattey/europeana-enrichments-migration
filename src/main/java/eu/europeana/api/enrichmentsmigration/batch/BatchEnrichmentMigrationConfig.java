@@ -1,7 +1,9 @@
 package eu.europeana.api.enrichmentsmigration.batch;
 
+import static eu.europeana.api.enrichmentsmigration.batch.BatchConstants.ENTITY_ID;
+import static eu.europeana.api.enrichmentsmigration.batch.BatchConstants.EXTERNAL_ID;
+
 import eu.europeana.api.enrichmentsmigration.config.AppConfig;
-import eu.europeana.api.enrichmentsmigration.exception.ServiceException;
 import eu.europeana.api.enrichmentsmigration.model.EnrichmentEntity;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -37,7 +39,6 @@ public class BatchEnrichmentMigrationConfig {
 
   private final FlatFileItemReader<EnrichmentEntity> reader;
 
-  private final EntitySameAsProcessor processor;
   private final EntityManagementWriter writer;
   private final EntityMigrationListener listener;
 
@@ -49,7 +50,6 @@ public class BatchEnrichmentMigrationConfig {
       JobBuilderFactory jobs,
       StepBuilderFactory steps,
       FlatFileItemReader<EnrichmentEntity> reader,
-      EntitySameAsProcessor processor,
       EntityManagementWriter writer,
       EntityMigrationListener listener,
       AppConfig appConfig) {
@@ -57,7 +57,6 @@ public class BatchEnrichmentMigrationConfig {
     this.jobs = jobs;
     this.steps = steps;
     this.reader = reader;
-    this.processor = processor;
     this.writer = writer;
     this.listener = listener;
     this.appConfig = appConfig;
@@ -71,7 +70,7 @@ public class BatchEnrichmentMigrationConfig {
 
   @Bean
   public Step partitionStep()
-      throws UnexpectedInputException, MalformedURLException, ParseException {
+      throws UnexpectedInputException, ParseException {
     return steps
         .get("partitionStep")
         .partitioner("slaveStep", partitioner())
@@ -86,11 +85,9 @@ public class BatchEnrichmentMigrationConfig {
         .get("slaveStep")
         .<EnrichmentEntity, EnrichmentEntity>chunk(1)
         .reader(reader)
-        .processor(processor)
         .faultTolerant()
         // do not fail on errors
         .skipPolicy((Throwable t, int skipCount) -> true)
-        .skip(ServiceException.class)
         .listener(
             (ItemProcessListener<? super EnrichmentEntity, ? super EnrichmentEntity>) listener)
         .writer(writer)
@@ -116,10 +113,10 @@ public class BatchEnrichmentMigrationConfig {
   @StepScope
   public FlatFileItemReader<EnrichmentEntity> itemReader(
       @Value("#{stepExecutionContext[fileName]}") String filename)
-      throws UnexpectedInputException, ParseException, MalformedURLException {
+      throws UnexpectedInputException, ParseException {
     FlatFileItemReader<EnrichmentEntity> reader = new FlatFileItemReader<EnrichmentEntity>();
     DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-    String[] tokens = {"enrichmentEntity.about", "enrichmentEntity.owlSameAs"};
+    String[] tokens = {EXTERNAL_ID, ENTITY_ID};
     tokenizer.setNames(tokens);
     reader.setResource(new FileSystemResource(appConfig.getEntitiesCsvDirectory() + filename));
     DefaultLineMapper<EnrichmentEntity> lineMapper = new DefaultLineMapper<>();

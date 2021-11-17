@@ -1,11 +1,13 @@
 package eu.europeana.api.enrichmentsmigration.model;
 
-import java.util.List;
-
 public class EnrichmentEntity {
-  private String entityId;
   private String externalId;
-  private List<String> sameAsValues;
+  private String entityId;
+
+  public EnrichmentEntity(String externalId, String entityId) {
+    this.externalId = externalId;
+    this.entityId = entityId;
+  }
 
   public String getEntityId() {
     return entityId;
@@ -13,14 +15,6 @@ public class EnrichmentEntity {
 
   public void setEntityId(String entityId) {
     this.entityId = entityId;
-  }
-
-  public List<String> getSameAsValues() {
-    return sameAsValues;
-  }
-
-  public void setSameAsValues(List<String> sameAsValues) {
-    this.sameAsValues = sameAsValues;
   }
 
   public String getExternalId() {

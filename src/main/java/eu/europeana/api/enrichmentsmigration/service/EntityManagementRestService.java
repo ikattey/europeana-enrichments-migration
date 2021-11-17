@@ -1,6 +1,5 @@
 package eu.europeana.api.enrichmentsmigration.service;
 
-import eu.europeana.api.enrichmentsmigration.WebClientFilter;
 import eu.europeana.api.enrichmentsmigration.config.AppConfig;
 import eu.europeana.api.enrichmentsmigration.exception.ServiceException;
 import eu.europeana.api.enrichmentsmigration.model.EntityRequestBody;
@@ -10,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
