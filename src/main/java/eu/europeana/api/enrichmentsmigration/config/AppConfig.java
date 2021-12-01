@@ -30,6 +30,21 @@ public class AppConfig {
   @Value("${entities-csv.skipLimit: 30}")
   private int skipLimit;
 
+  @Value("${auth.url}")
+  private String authBaseUrl;
+
+  @Value("${auth.clientId}")
+  private String clientId;
+
+  @Value("${auth.clientSecret}")
+  private String clientSecret;
+
+  @Value("${auth.scope}")
+  private String scope;
+
+  @Value("${auth.refreshToken}")
+  private String refreshToken;
+
   public String getEntityManagementUrl() {
     return entityManagementUrl;
   }
@@ -56,5 +71,25 @@ public class AppConfig {
 
   public String getEntityManagementRequestToken() {
     return entityManagementRequestToken;
+  }
+
+  public String getAuthBaseUrl() {
+    return authBaseUrl;
+  }
+
+  public String getClientId() {
+    return clientId;
+  }
+
+  public String getClientSecret() {
+    return clientSecret;
+  }
+
+  public String getScope() {
+    return scope;
+  }
+
+  public String getRefreshToken() {
+    return refreshToken;
   }
 }

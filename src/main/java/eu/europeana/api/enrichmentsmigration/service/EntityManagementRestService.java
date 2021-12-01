@@ -3,6 +3,7 @@ package eu.europeana.api.enrichmentsmigration.service;
 import eu.europeana.api.enrichmentsmigration.config.AppConfig;
 import eu.europeana.api.enrichmentsmigration.exception.ServiceException;
 import eu.europeana.api.enrichmentsmigration.model.EntityRequestBody;
+import eu.europeana.api.enrichmentsmigration.model.IsShownBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
@@ -17,7 +18,11 @@ public class EntityManagementRestService {
   private final WebClient webClient;
   private static final Logger logger = LogManager.getLogger(EntityManagementRestService.class);
 
-  public EntityManagementRestService(AppConfig appConfig) {
+  private volatile boolean isTokenRefreshed = false;
+  private final AuthRestService authService;
+
+  public EntityManagementRestService(AppConfig appConfig, AuthRestService authService) {
+    this.authService = authService;
     this.webClient =
         WebClient.builder()
             .baseUrl(appConfig.getEntityManagementUrl())
@@ -44,7 +49,10 @@ public class EntityManagementRestService {
           .block();
     } catch (WebClientResponseException we) {
       logger.error(
-          "Error from POST request entityId={}; statusCode={}; response={}", entityId, we.getRawStatusCode(), we.getResponseBodyAsString());
+          "Error from POST request entityId={}; statusCode={}; response={}",
+          entityId,
+          we.getRawStatusCode(),
+          we.getResponseBodyAsString());
       throw new ServiceException(we.getMessage(), we.getRawStatusCode());
     }
   }
@@ -61,5 +69,65 @@ public class EntityManagementRestService {
 
     // base not included in request path
     return StringUtils.capitalize(entityType) + "/" + parts[parts.length - 1];
+  }
+
+  public void updateIsShownBy(IsShownBy item) {
+    try {
+      webClient
+          .put()
+          .uri("/entity/" + getEntityRequestPath(item.getEntityId()))
+          .headers(header -> header.setBearerAuth(authService.getAccessToken()))
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(BodyInserters.fromValue(createRequestBody(item)))
+          .retrieve()
+          .toBodilessEntity()
+          .block();
+      logger.info("Submitted isShownBy for {}", item.getEntityId());
+    } catch (WebClientResponseException we) {
+      logger.error(
+          "Error from POST request entityId={}; statusCode={}; response={}",
+          item.getEntityId(),
+          we.getRawStatusCode(),
+          we.getResponseBodyAsString());
+
+      if (we.getRawStatusCode() == 401) {
+        // prevent multiple threads from simultaneously refreshing token
+        if(!isTokenRefreshed){
+          synchronized (this) {
+            if (!isTokenRefreshed) {
+              logger.info("Obtaining new token");
+              authService.getNewAccessToken();
+              logger.info("Token obtained. Making new request");
+              isTokenRefreshed = true;
+            }
+          }
+          updateIsShownBy(item);
+          isTokenRefreshed = false;
+        }
+      }
+    }
+  }
+
+  private static String createRequestBody(IsShownBy item) {
+    return String.format(
+        "{"
+            + "\"@context\": \"http://www.europeana.eu/schemas/context/entity.jsonld\", "
+            + "\"type\": \"%s\","
+            + "\"isShownBy\": {"
+            + "\"id\": \"%s\","
+            + "\"source\": \"%s\","
+            + "\"thumbnail\": \"%s\""
+            + "}"
+            + "}",
+        getEntityType(item.getEntityId()),
+        item.getIsShownById(),
+        item.getIsShownBySource(),
+        item.getIsShownByThumbnail());
+  }
+
+  private static String getEntityType(String entityId) {
+    String[] parts = entityId.split("/");
+    return StringUtils.capitalize(parts[parts.length - 2]);
   }
 }

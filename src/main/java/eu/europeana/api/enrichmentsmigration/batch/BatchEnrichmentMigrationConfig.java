@@ -1,13 +1,14 @@
 package eu.europeana.api.enrichmentsmigration.batch;
 
 import static eu.europeana.api.enrichmentsmigration.batch.BatchConstants.ENTITY_ID;
-import static eu.europeana.api.enrichmentsmigration.batch.BatchConstants.EXTERNAL_ID;
+import static eu.europeana.api.enrichmentsmigration.batch.BatchConstants.IS_SHOWN_BY_ID;
+import static eu.europeana.api.enrichmentsmigration.batch.BatchConstants.IS_SHOWN_BY_SOURCE;
+import static eu.europeana.api.enrichmentsmigration.batch.BatchConstants.IS_SHOWN_BY_THUMBNAIL;
 
 import eu.europeana.api.enrichmentsmigration.config.AppConfig;
-import eu.europeana.api.enrichmentsmigration.model.EnrichmentEntity;
+import eu.europeana.api.enrichmentsmigration.model.IsShownBy;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import org.springframework.batch.core.ItemProcessListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -18,6 +19,7 @@ import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -37,9 +39,9 @@ public class BatchEnrichmentMigrationConfig {
 
   private final StepBuilderFactory steps;
 
-  private final FlatFileItemReader<EnrichmentEntity> reader;
+  private final FlatFileItemReader<IsShownBy> reader;
 
-  private final EntityManagementWriter writer;
+  private final IsShownByWriter writer;
   private final EntityMigrationListener listener;
 
   private final AppConfig appConfig;
@@ -49,8 +51,8 @@ public class BatchEnrichmentMigrationConfig {
       ResourcePatternResolver resourcePatternResolver,
       JobBuilderFactory jobs,
       StepBuilderFactory steps,
-      FlatFileItemReader<EnrichmentEntity> reader,
-      EntityManagementWriter writer,
+      FlatFileItemReader<IsShownBy> reader,
+      IsShownByWriter writer,
       EntityMigrationListener listener,
       AppConfig appConfig) {
     this.resourcePatternResolver = resourcePatternResolver;
@@ -69,8 +71,7 @@ public class BatchEnrichmentMigrationConfig {
   }
 
   @Bean
-  public Step partitionStep()
-      throws UnexpectedInputException, ParseException {
+  public Step partitionStep() throws UnexpectedInputException, ParseException {
     return steps
         .get("partitionStep")
         .partitioner("slaveStep", partitioner())
@@ -83,13 +84,11 @@ public class BatchEnrichmentMigrationConfig {
   public Step slaveStep() throws UnexpectedInputException, ParseException {
     return steps
         .get("slaveStep")
-        .<EnrichmentEntity, EnrichmentEntity>chunk(1)
+        .<IsShownBy, IsShownBy>chunk(50)
         .reader(reader)
         .faultTolerant()
         // do not fail on errors
         .skipPolicy((Throwable t, int skipCount) -> true)
-        .listener(
-            (ItemProcessListener<? super EnrichmentEntity, ? super EnrichmentEntity>) listener)
         .writer(writer)
         .build();
   }
@@ -111,17 +110,23 @@ public class BatchEnrichmentMigrationConfig {
 
   @Bean
   @StepScope
-  public FlatFileItemReader<EnrichmentEntity> itemReader(
+  public FlatFileItemReader<IsShownBy> itemReader(
       @Value("#{stepExecutionContext[fileName]}") String filename)
       throws UnexpectedInputException, ParseException {
-    FlatFileItemReader<EnrichmentEntity> reader = new FlatFileItemReader<EnrichmentEntity>();
+    FlatFileItemReader<IsShownBy> reader = new FlatFileItemReader<>();
     DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-    String[] tokens = {EXTERNAL_ID, ENTITY_ID};
+    String[] tokens = {ENTITY_ID, IS_SHOWN_BY_ID, IS_SHOWN_BY_SOURCE, IS_SHOWN_BY_THUMBNAIL};
     tokenizer.setNames(tokens);
     reader.setResource(new FileSystemResource(appConfig.getEntitiesCsvDirectory() + filename));
-    DefaultLineMapper<EnrichmentEntity> lineMapper = new DefaultLineMapper<>();
+    DefaultLineMapper<IsShownBy> lineMapper = new DefaultLineMapper<>();
     lineMapper.setLineTokenizer(tokenizer);
-    lineMapper.setFieldSetMapper(new EnrichmentEntityFieldSetMapper());
+    lineMapper.setFieldSetMapper(
+        (FieldSet fieldSet) ->
+            new IsShownBy(
+                fieldSet.readString(ENTITY_ID),
+                fieldSet.readString(IS_SHOWN_BY_ID),
+                fieldSet.readString(IS_SHOWN_BY_SOURCE),
+                fieldSet.readString(IS_SHOWN_BY_THUMBNAIL)));
     reader.setLineMapper(lineMapper);
     return reader;
   }
