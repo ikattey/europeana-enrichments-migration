@@ -115,7 +115,7 @@ public class BatchEnrichmentMigrationConfig {
       throws UnexpectedInputException, ParseException {
     FlatFileItemReader<IsShownBy> reader = new FlatFileItemReader<>();
     DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-    String[] tokens = {ENTITY_ID, IS_SHOWN_BY_ID, IS_SHOWN_BY_SOURCE, IS_SHOWN_BY_THUMBNAIL};
+    String[] tokens = {ENTITY_ID, IS_SHOWN_BY_SOURCE, IS_SHOWN_BY_ID, IS_SHOWN_BY_THUMBNAIL};
     tokenizer.setNames(tokens);
     reader.setResource(new FileSystemResource(appConfig.getEntitiesCsvDirectory() + filename));
     DefaultLineMapper<IsShownBy> lineMapper = new DefaultLineMapper<>();
@@ -124,8 +124,8 @@ public class BatchEnrichmentMigrationConfig {
         (FieldSet fieldSet) ->
             new IsShownBy(
                 fieldSet.readString(ENTITY_ID),
-                fieldSet.readString(IS_SHOWN_BY_ID),
                 fieldSet.readString(IS_SHOWN_BY_SOURCE),
+                fieldSet.readString(IS_SHOWN_BY_ID),
                 fieldSet.readString(IS_SHOWN_BY_THUMBNAIL)));
     reader.setLineMapper(lineMapper);
     return reader;

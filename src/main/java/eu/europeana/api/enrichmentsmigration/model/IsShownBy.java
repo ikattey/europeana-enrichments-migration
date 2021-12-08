@@ -8,10 +8,10 @@ public class IsShownBy {
   private final String isShownByThumbnail;
 
   public IsShownBy(
-      String entityId, String isShownById, String isShownBySource, String isShownByThumbnail) {
+      String entityId, String isShownBySource, String isShownById,String isShownByThumbnail) {
     this.entityId = entityId;
-    this.isShownById = isShownById;
     this.isShownBySource = isShownBySource;
+    this.isShownById = isShownById;
     this.isShownByThumbnail = isShownByThumbnail;
   }
 
